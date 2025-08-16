@@ -1,63 +1,101 @@
 import random
+import string
+from tkinter import *
+from tkinter import ttk, messagebox
 
-def generatePassword(pwlength):
-
-    alphabet = "abcdefghijklmnopqrstuvwxyz"
-
-    passwords = [] 
-
-    for i in pwlength:
+class PasswordGenerator:
+    def __init__(self, root):  # ✅ Correct constructor
+        self.root = root
+        self.root.title("Ultimate Password Generator")
+        self.root.geometry("500x400")
+        self.root.configure(bg='#f0f0f0')
         
-        password = "" 
-        for j in range(i):
-            next_letter_index = random.randrange(len(alphabet))
-            password = password + alphabet[next_letter_index]
+        self.create_widgets()
         
-        password = replaceWithNumber(password)
-        password = replaceWithUppercaseLetter(password)
+    def create_widgets(self):
+        # Main frame
+        main_frame = Frame(self.root, bg='#f0f0f0')
+        main_frame.pack(pady=20)
         
-        passwords.append(password) 
+        # Title
+        Label(main_frame, text="Secure Password Generator", font=('Helvetica', 18, 'bold'), bg='#f0f0f0').pack(pady=10)
+        
+        # Length control
+        length_frame = Frame(main_frame, bg='#f0f0f0')
+        length_frame.pack(pady=10)
+        Label(length_frame, text="Password Length:", bg='#f0f0f0').pack(side=LEFT)
+        self.length_var = IntVar(value=16)
+        Spinbox(length_frame, from_=8, to=64, textvariable=self.length_var, width=5).pack(side=LEFT, padx=10)
+        
+        # Character types
+        options_frame = Frame(main_frame, bg='#f0f0f0')
+        options_frame.pack(pady=10)
+        
+        self.lower_var = BooleanVar(value=True)
+        Checkbutton(options_frame, text="Lowercase (a-z)", variable=self.lower_var, bg='#f0f0f0').pack(anchor=W)
+        
+        self.upper_var = BooleanVar(value=True)
+        Checkbutton(options_frame, text="Uppercase (A-Z)", variable=self.upper_var, bg='#f0f0f0').pack(anchor=W)
+        
+        self.digit_var = BooleanVar(value=True)
+        Checkbutton(options_frame, text="Digits (0-9)", variable=self.digit_var, bg='#f0f0f0').pack(anchor=W)
+        
+        self.special_var = BooleanVar(value=True)
+        Checkbutton(options_frame, text="Special Characters", variable=self.special_var, bg='#f0f0f0').pack(anchor=W)
+        
+        self.extended_special_var = BooleanVar()
+        Checkbutton(options_frame, text="Include Rare Symbols", variable=self.extended_special_var, bg='#f0f0f0').pack(anchor=W)
+        
+        # Generate button
+        Button(main_frame, text="Generate Password", command=self.generate_password, bg='#4CAF50', fg='white').pack(pady=20)
+        
+        # Password display
+        self.password_var = StringVar()
+        password_entry = Entry(main_frame, textvariable=self.password_var, font=('Courier', 14), width=30, justify=CENTER, bd=2, relief="sunken")
+        password_entry.pack(pady=10)
+        
+        # Copy button
+        Button(main_frame, text="Copy to Clipboard", command=self.copy_to_clipboard, bg='#2196F3', fg='white').pack(pady=5)
     
-    return passwords
+    def get_character_set(self):
+        """Build character set based on user selections"""
+        chars = ''
+        
+        if self.lower_var.get():
+            chars += string.ascii_lowercase
+        if self.upper_var.get():
+            chars += string.ascii_uppercase
+        if self.digit_var.get():
+            chars += string.digits
+        if self.special_var.get():
+            chars += '!@#$%^&*()-_=+[]{}|;:,.<>?'
+        if self.extended_special_var.get():
+            chars += '€£¥©®™✓§¶•'
 
+        return chars
 
-def replaceWithNumber(pword):
-    for i in range(random.randrange(1,3)):
-        replace_index = random.randrange(len(pword)//2)
-        pword = pword[0:replace_index] + str(random.randrange(10)) + pword[replace_index+1:]
-        return pword
+    def generate_password(self):
+        length = self.length_var.get()
+        charset = self.get_character_set()
 
+        if not charset:
+            messagebox.showwarning("No Characters Selected", "Please select at least one character type.")
+            return
 
-def replaceWithUppercaseLetter(pword):
-    for i in range(random.randrange(1,3)):
-        replace_index = random.randrange(len(pword)//2,len(pword))
-        pword = pword[0:replace_index] + pword[replace_index].upper() + pword[replace_index+1:]
-        return pword
+        password = ''.join(random.choice(charset) for _ in range(length))
+        self.password_var.set(password)
 
+    def copy_to_clipboard(self):
+        password = self.password_var.get()
+        if password:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(password)
+            messagebox.showinfo("Copied", "Password copied to clipboard!")
+        else:
+            messagebox.showwarning("No Password", "Generate a password first.")
 
-
-def main():
-    
-    numPasswords = int(input("How many passwords do you want to generate? "))
-    
-    print("Generating " +str(numPasswords)+" passwords")
-    
-    passwordLengths = []
-
-    print("Minimum length of password should be 3")
-
-    for i in range(numPasswords):
-        length = int(input("Enter the length of Password #" + str(i+1) + " "))
-        if length<3:
-            length = 3
-        passwordLengths.append(length)
-    
-    
-    Password = generatePassword(passwordLengths)
-
-    for i in range(numPasswords):
-        print ("Password #"+str(i+1)+" = " + Password[i])
-
-
-
-main()
+# ✅ Correct main entry point
+if __name__ == "__main__":
+    root = Tk()
+    app = PasswordGenerator(root)
+    root.mainloop()
